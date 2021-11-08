@@ -2128,6 +2128,52 @@ class Visdom(object):
 
         return self.scatter(X=data, Y=labels, opts=opts, win=win, env=env)
 
+
+    @pytorch_wrap
+    def sunburst(self, labels, parents, values=None, win=None, env=None, opts=None):
+        opts = {} if opts is None else opts
+        _title2str(opts)
+        _assert_opts(opts)
+
+        font_size=opts.get("size")
+        font_color=opts.get("font_color")
+        opacity=opts.get("opacity")
+        line_width=opts.get("marker_width")
+
+        assert len(parents.tolist())==len(labels.tolist()), "length of parents and labels should be equal"
+        
+        if(values!=None):
+            values = np.squeeze(values)
+            assert values.ndim == 1, 'values should be one-dimensional'
+            assert len(parents.tolist())==len(values.tolist()), "length of values should be equal to lenght of labels and parents"
+            data = [{
+                'values': values.tolist(),
+                'labels': labels.tolist(),
+                "parents":parents.tolist(),
+                "outsidetextfont":{"size":font_size,"color":font_color},
+                "leaf":{"opacity":opacity},
+                "marker":{"line":{"width":line_width}},
+                'type': 'sunburst',
+            }]
+        
+        else:
+            data = [{
+                'labels': labels.tolist(),
+                "parents":parents.tolist(),
+                "outsidetextfont":{"size":font_size,"color":font_color},
+                "leaf":{"opacity":opacity},
+                "marker":{"line":{"width":line_width}},
+                'type': 'sunburst',
+            }]            
+        return self._send({
+            'data': data,
+            'win': win,
+            'eid': env,
+            'layout': _opts2layout(opts),
+            'opts': opts,
+        })
+
+
     @pytorch_wrap
     def pie(self, X, win=None, env=None, opts=None):
         """
